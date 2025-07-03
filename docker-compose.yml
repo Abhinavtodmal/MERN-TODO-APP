@@ -5,7 +5,7 @@ services:
     build: ./server
     container_name: todo-server
     ports:
-      - "5001:5001"
+      - "5000:5000"
     environment:
       - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}  # Injected by Jenkins
       - JWT_SECRET=${JWT_SECRET}                # Injected by Jenkins
