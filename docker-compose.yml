@@ -1,36 +1,19 @@
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:6
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-
   server:
     build: ./server
     container_name: todo-server
     ports:
-      - "5000:5000"
+      - "5001:5001"
     environment:
-      MONGODB_URI: mongodb://root:example@mongodb:27017/todoapp?authSource=admin
-    depends_on:
-      - mongodb
+      - MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}  # Injected by Jenkins
+      - JWT_SECRET=${JWT_SECRET}                # Injected by Jenkins
     restart: unless-stopped
 
   client:
     build: ./client
     container_name: todo-client
     ports:
-      - "80:80"
-    depends_on:
-      - server
+      - "3000:3000"
     restart: unless-stopped
-
-volumes:
-  mongodb_data:

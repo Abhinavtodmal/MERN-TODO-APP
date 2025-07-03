@@ -1,13 +1,14 @@
-# Node
+# Environment files
+.env
+*.env
+
+# Node.js
 node_modules/
 npm-debug.log
 
-# Environment
-.env
+# Docker
+docker-compose.override.yml
 
 # IDE
 .vscode/
 .idea/
-
-# Docker
-docker-compose.override.yml
