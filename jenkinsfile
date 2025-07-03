@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKER_IMAGE = 'your-dockerhub-username/mern-todo-app'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Abhinavtodmal/MERN-TODO-APP.git'
+            }
+        }
+        
+        stage('Build Backend') {
+            steps {
+                dir('server') {
+                    sh 'docker build -t ${DOCKER_IMAGE}-server:${DOCKER_TAG} .'
+                }
+            }
+        }
+        
+        stage('Build Frontend') {
+            steps {
+                dir('client') {
+                    sh 'docker build -t ${DOCKER_IMAGE}-client:${DOCKER_TAG} .'
+                }
+            }
+        }
+        
+        stage('Push Images') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
+                        sh 'echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin'
+                        sh 'docker push ${DOCKER_IMAGE}-server:${DOCKER_TAG}'
+                        sh 'docker push ${DOCKER_IMAGE}-client:${DOCKER_TAG}'
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                sh 'docker-compose down'
+                sh 'docker-compose up -d'
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
