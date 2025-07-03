@@ -4,8 +4,8 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'abhinavtodmal/mern-todo-app'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
-        MONGODB_ATLAS_URI = credentials('mongodb-atlas-uri')  // From Jenkins credentials
-        JWT_SECRET = credentials('jwt-secret')                // From Jenkins credentials
+        MONGODB_ATLAS_URI = credentials('mongodb-atlas-uri')
+        JWT_SECRET = credentials('jwt-secret')
     }
     
     stages {
@@ -15,41 +15,14 @@ pipeline {
             }
         }
         
-<<<<<<< HEAD:Jenkinsfile
-       stage('Build Images') {
-    steps {
-        script {
-            // For Windows agents, use double quotes and escape special characters
-            def serverBuildCommand = """
-                docker build \
-                --build-arg MONGODB_ATLAS_URI=\"${env.MONGODB_ATLAS_URI}\" \
-                --build-arg JWT_SECRET=\"${env.JWT_SECRET}\" \
-                -t ${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG} ./server
-            """.stripIndent().trim()
-
-            def clientBuildCommand = """
-                docker build \
-                -t ${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG} ./client
-            """.stripIndent().trim()
-
-            // Execute commands
-            bat serverBuildCommand
-            bat clientBuildCommand
-=======
         stage('Build Images') {
             steps {
                 script {
-                    // Build server image (secrets will be passed at runtime)
                     docker.build("${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG}", "./server")
-                    
-                    // Build client image with nginx.conf
                     docker.build("${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG}", "./client")
                 }
             }
->>>>>>> d9f484c (WIP: Ongoing changes before rebase):jenkinsfile
         }
-    }
-}
         
         stage('Push Images') {
             steps {
@@ -72,7 +45,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // For Windows compatibility using bat and set
                     if (isUnix()) {
                         sh '''
                             docker-compose down
@@ -97,10 +69,8 @@ pipeline {
         always {
             cleanWs()
             script {
-                // Clean up Docker images to save space
                 sh 'docker system prune -af || true'
             }
         }
     }
-}
 }
