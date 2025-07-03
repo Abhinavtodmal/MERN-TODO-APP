@@ -15,6 +15,7 @@ pipeline {
             }
         }
         
+<<<<<<< HEAD:Jenkinsfile
        stage('Build Images') {
     steps {
         script {
@@ -34,6 +35,18 @@ pipeline {
             // Execute commands
             bat serverBuildCommand
             bat clientBuildCommand
+=======
+        stage('Build Images') {
+            steps {
+                script {
+                    // Build server image (secrets will be passed at runtime)
+                    docker.build("${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG}", "./server")
+                    
+                    // Build client image with nginx.conf
+                    docker.build("${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG}", "./client")
+                }
+            }
+>>>>>>> d9f484c (WIP: Ongoing changes before rebase):jenkinsfile
         }
     }
 }
@@ -58,10 +71,24 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                sh '''
-                    docker-compose down
-                    MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI} JWT_SECRET=${JWT_SECRET} docker-compose up -d
-                '''
+                script {
+                    // For Windows compatibility using bat and set
+                    if (isUnix()) {
+                        sh '''
+                            docker-compose down
+                            export MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
+                            export JWT_SECRET=${JWT_SECRET}
+                            docker-compose up -d
+                        '''
+                    } else {
+                        bat '''
+                            docker-compose down
+                            set MONGODB_ATLAS_URI=%MONGODB_ATLAS_URI%
+                            set JWT_SECRET=%JWT_SECRET%
+                            docker-compose up -d
+                        '''
+                    }
+                }
             }
         }
     }
@@ -69,6 +96,11 @@ pipeline {
     post {
         always {
             cleanWs()
+            script {
+                // Clean up Docker images to save space
+                sh 'docker system prune -af || true'
+            }
         }
     }
+}
 }
