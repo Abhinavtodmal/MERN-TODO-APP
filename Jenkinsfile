@@ -15,21 +15,28 @@ pipeline {
             }
         }
         
-        stage('Build Images') {
-            steps {
-                script {
-                    // Build server with secrets as build args
-                    docker.build("${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG}", 
-                        "--build-arg MONGODB_ATLAS_URI=${env.MONGODB_ATLAS_URI} " +
-                        "--build-arg JWT_SECRET=${env.JWT_SECRET} " +
-                        "./server"
-                    )
-                    
-                    // Build client (no secrets needed)
-                    docker.build("${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG}", "./client")
-                }
-            }
+       stage('Build Images') {
+    steps {
+        script {
+            // For Windows agents, use double quotes and escape special characters
+            def serverBuildCommand = """
+                docker build \
+                --build-arg MONGODB_ATLAS_URI=\"${env.MONGODB_ATLAS_URI}\" \
+                --build-arg JWT_SECRET=\"${env.JWT_SECRET}\" \
+                -t ${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG} ./server
+            """.stripIndent().trim()
+
+            def clientBuildCommand = """
+                docker build \
+                -t ${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG} ./client
+            """.stripIndent().trim()
+
+            // Execute commands
+            bat serverBuildCommand
+            bat clientBuildCommand
         }
+    }
+}
         
         stage('Push Images') {
             steps {
