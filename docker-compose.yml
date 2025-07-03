@@ -15,5 +15,5 @@ services:
     build: ./client
     container_name: todo-client
     ports:
-      - "3000:3000"
+      - "3000:80"
     restart: unless-stopped
