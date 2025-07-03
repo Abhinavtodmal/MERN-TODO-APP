@@ -18,8 +18,10 @@ pipeline {
         stage('Build Images') {
             steps {
                 script {
-                    docker.build("${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG}", "./server")
-                    docker.build("${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG}", "./client")
+                    bat """
+                        docker build -t ${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG} ./server
+                        docker build -t ${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG} ./client
+                    """
                 }
             }
         }
@@ -32,11 +34,11 @@ pipeline {
                         usernameVariable: 'DOCKER_USERNAME',
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
-                        sh '''
-                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                            docker push ${DOCKER_IMAGE}-server:${DOCKER_TAG}
-                            docker push ${DOCKER_IMAGE}-client:${DOCKER_TAG}
-                        '''
+                        bat """
+                            echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                            docker push ${env.DOCKER_IMAGE}-server:${env.DOCKER_TAG}
+                            docker push ${env.DOCKER_IMAGE}-client:${env.DOCKER_TAG}
+                        """
                     }
                 }
             }
@@ -45,21 +47,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    if (isUnix()) {
-                        sh '''
-                            docker-compose down
-                            export MONGODB_ATLAS_URI=${MONGODB_ATLAS_URI}
-                            export JWT_SECRET=${JWT_SECRET}
-                            docker-compose up -d
-                        '''
-                    } else {
-                        bat '''
-                            docker-compose down
-                            set MONGODB_ATLAS_URI=%MONGODB_ATLAS_URI%
-                            set JWT_SECRET=%JWT_SECRET%
-                            docker-compose up -d
-                        '''
-                    }
+                    bat """
+                        docker-compose down
+                        set MONGODB_ATLAS_URI=${env.MONGODB_ATLAS_URI}
+                        set JWT_SECRET=${env.JWT_SECRET}
+                        docker-compose up -d
+                    """
                 }
             }
         }
@@ -68,9 +61,6 @@ pipeline {
     post {
         always {
             cleanWs()
-            script {
-                sh 'docker system prune -af || true'
-            }
         }
     }
 }
