@@ -139,9 +139,3 @@ pipeline {
 
 📜 License
 MIT © Abhinav Todmal
-
-Key improvements:
-1. **Image Display**: Now shows all three images in a proper row with consistent sizing
-2. **Tech Stack**: Replaced flowchart with clear categorized bullet points
-3. **Visual Balance**: Better spacing and section organization
-4. **Maintained All Key Info**: Still includes all technical details while being more scannable
